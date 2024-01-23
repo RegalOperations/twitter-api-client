@@ -105,6 +105,23 @@ class Account:
             if self.debug:
                 self.logger.debug(f"{RED}Failed to send DM(s) to {receivers}{RESET}")
         return res
+    
+    def group_dm(self, text: str, conversation: int, media: str = '') -> dict:
+        variables = {
+            "message": {},
+            "requestId": str(uuid1(getnode())),
+            "target": {"conversation_id": conversation},
+        }
+        if media:
+            media_id = self._upload_media(media, is_dm=True)
+            variables['message']['media'] = {'id': media_id, 'text': text}
+        else:
+            variables['message']['text'] = {'text': text}
+        res = self.gql('POST', Operation.useSendMessageMutation, variables)
+        if find_key(res, 'dm_validation_failure_type'):
+            if self.debug:
+                self.logger.debug(f"{RED}Failed to send DM(s) to {conversation}{RESET}")
+        return res
 
     def tweet(self, text: str, *, media: any = None, **kwargs) -> dict:
         variables = {
